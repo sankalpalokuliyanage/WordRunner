@@ -10,13 +10,19 @@ async function init() {
 
 async function fetchWords() {
     try {
+        // TOPIK වචන ලබා ගැනීම (Level 1 ලෙස දැනට පවතී)
         const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=Level 1`);
         dataset = await res.json();
-        document.getElementById('loader').style.display = 'none';
-        renderMatchBoard();
+        
+        if(dataset.length > 0) {
+            document.getElementById('loader').style.display = 'none';
+            renderMatchBoard();
+        } else {
+            document.querySelector('#loader p').innerText = "NO DATA FOUND!";
+        }
     } catch (e) {
-        console.error("Cloud Error", e);
-        document.getElementById('loader').innerText = "CONNECTION FAILED!";
+        document.querySelector('#loader p').innerText = "CONNECTION ERROR!";
+        console.error(e);
     }
 }
 
@@ -28,10 +34,9 @@ function renderMatchBoard() {
     koList.innerHTML = "";
     selectedEn = null;
 
-    // වචන 5ක් බැගින් වටයකට තෝරා ගනිමු
-    let roundData = dataset.sort(() => 0.5 - Math.random()).slice(0, 5);
+    // වටයකට වචන 6ක් තෝරා ගැනීම (Portrait එකට 6ක් හොඳින් ගැලපේ)
+    let roundData = dataset.sort(() => 0.5 - Math.random()).slice(0, 6);
     
-    // දෙපැත්තට වචන shuffle කරමු
     let enSide = [...roundData].sort(() => 0.5 - Math.random());
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
 
@@ -53,40 +58,33 @@ function renderMatchBoard() {
 }
 
 function selectEnglish(btn, matchId) {
-    // කලින් තෝරාගත් එකක් ඇත්නම් අයින් කරන්න
     document.querySelectorAll('#en-list .word-btn').forEach(b => b.classList.remove('active'));
-    
     selectedEn = { btn, matchId };
     btn.classList.add('active');
 }
 
 function selectKorean(btn, koreanText) {
-    if (!selectedEn) return; // මුලින් ඉංග්‍රීසි වචනයක් තෝරාගත යුතුයි
+    if (!selectedEn) return;
 
     if (selectedEn.matchId === koreanText) {
-        // නිවැරදියි!
         btn.classList.add('correct');
         selectedEn.btn.classList.add('correct');
-        
         score++;
         document.getElementById('count').innerText = score;
-        
         selectedEn = null;
         checkNextRound();
     } else {
-        // වැරදියි
         btn.classList.add('wrong');
-        setTimeout(() => btn.classList.remove('wrong'), 500);
+        setTimeout(() => btn.classList.remove('wrong'), 400);
     }
 }
 
 function checkNextRound() {
-    // සියලුම වචන මැච් කරලාද බලන්න
     const remaining = Array.from(document.querySelectorAll('.word-btn'))
                            .filter(b => !b.classList.contains('correct'));
     
     if (remaining.length === 0) {
-        setTimeout(renderMatchBoard, 800); // අලුත් වටයක් පටන් ගන්න
+        setTimeout(renderMatchBoard, 600);
     }
 }
 
