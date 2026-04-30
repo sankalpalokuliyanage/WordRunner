@@ -3,57 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lexicon Jet: Sky Navigator</title>
+    <title>Lexicon Terminal | Word Matcher</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #87ceeb; touch-action: none; font-family: 'Orbitron', sans-serif; }
-        #joystick-zone { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; z-index: 100; opacity: 0.7; }
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #000a12;
+        }
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+        header {
+            padding: 20px; text-align: center;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+        .score-box { font-weight: bold; color: var(--neon-blue); letter-spacing: 2px; }
         
-        #ui-overlay {
-            position: absolute; top: 20px; width: 100%; text-align: center;
-            color: white; pointer-events: none; z-index: 10;
+        #game-container {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
         }
 
-        .hud-display {
-            background: rgba(0, 40, 80, 0.6);
-            border: 2px solid #00f2ff;
-            border-radius: 15px;
-            padding: 15px 30px;
-            display: inline-block;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        .column {
+            display: flex; flex-direction: column; gap: 15px; width: 45%;
         }
 
-        #target-label { font-size: 12px; color: #00f2ff; letter-spacing: 2px; margin-bottom: 5px; }
-        #word { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 0 10px #00f2ff; }
-        #score-board { position: absolute; top: 20px; right: 20px; color: #00f2ff; font-weight: bold; }
+        .word-btn {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: white;
+            padding: 18px 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        #loader { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #001220; display: flex; align-items: center; justify-content: center; z-index: 1000; 
-            color: #00f2ff; flex-direction: column;
+        .word-btn.active {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: scale(1.05);
+        }
+
+        .word-btn.correct {
+            background: #10b981;
+            border-color: #10b981;
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        .word-btn.wrong {
+            background: #ef4444;
+            border-color: #ef4444;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; font-weight: bold; color: var(--neon-blue);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div id="loader">
-    <h2 style="letter-spacing: 5px; margin-bottom: 10px;">INITIALIZING JET...</h2>
-    <div style="font-size: 12px; opacity: 0.6;">SYNCING KOREAN DATABASE</div>
+<div id="loader">BOOTING TERMINAL...</div>
+
+<header>
+    <div class="score-box">MATCHED: <span id="count">0</span></div>
+</header>
+
+<div id="game-container">
+    <div class="column" id="en-list"></div>
+    <div class="column" id="ko-list"></div>
 </div>
 
-<div id="ui-overlay">
-    <div id="score-board">SCORE: <span id="count">0</span></div>
-    <div class="hud-display">
-        <div id="target-label">NAVIGATION TARGET</div>
-        <div id="word">SYNCING...</div>
-    </div>
-</div>
-
-<div id="joystick-zone"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
 <script src="game.js"></script>
 
 </body>
