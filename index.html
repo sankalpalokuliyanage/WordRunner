@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lexicon Dungeon 3D</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
+        #joystick-zone { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; z-index: 100; }
+        #ui-overlay {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: white; pointer-events: none; z-index: 10;
+        }
+        .target-box { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 15px; display: inline-block; border: 1px solid #4f46e5; }
+        .target-word { font-size: 28px; font-weight: 900; color: #60a5fa; text-transform: uppercase; }
+        #stats { font-size: 14px; margin-top: 5px; opacity: 0.8; }
+        #loader { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: black; display: flex; align-items: center; justify-content: center; z-index: 1000; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader"><h2 style="color: white;">Syncing Dataset...</h2></div>
+
+<div id="ui-overlay">
+    <div class="target-box">
+        <div id="stats">Level 1-1 | Progress: <span id="count">0</span>/50</div>
+        <div class="target-word" id="word">LOADING...</div>
+    </div>
+</div>
+
+<div id="joystick-zone"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
