@@ -1,19 +1,17 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxenP37pvmwucpQ2LFPk3QeTaqSr9FeZtPnBMkVn-7gXngAuip8cyxbN3zKObZ0v1i6_A/exec';
 
 
-
 let scene, camera, renderer, clock, moveData = { x: 0, y: 0 };
-let treasureChests = [], dataset = [], currentTarget = null;
-let score = 0;
+let aeroGates = [], dataset = [], currentTarget = null;
+let jetModel;
 
 function init() {
-    // 1. Scene & Environment
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a192f); 
-    scene.fog = new THREE.FogExp2(0x0a192f, 0.1); 
+    scene.background = new THREE.Color(0x87ceeb); // ලස්සන නිල් අහස
+    scene.fog = new THREE.Fog(0x87ceeb, 10, 100);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2, 5);
+    camera.position.set(0, 2, 8); // Jet එකට පිටුපසින් කැමරාව
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -22,79 +20,70 @@ function init() {
 
     clock = new THREE.Clock();
 
-    // 2. Lighting
-    const sunLight = new THREE.DirectionalLight(0x40e0d0, 1.5);
-    sunLight.position.set(0, 20, 10);
+    // Lighting
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    sunLight.position.set(5, 10, 7);
     scene.add(sunLight);
-    scene.add(new THREE.AmbientLight(0x404040, 1.5));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
+    createSky();
+    createJet(); // Jet යානය නිර්මාණය
     setupJoystick();
-    createSeaWorld();
     fetchWords();
     animate();
 }
 
-function createSeaWorld() {
-    const loader = new THREE.TextureLoader();
-    
-    // වැලි සහිත මුහුදු පතුල
-    const sandTex = loader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
-    const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(200, 200),
-        new THREE.MeshStandardMaterial({ color: 0x1a3a5a, map: sandTex })
-    );
-    floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
-
-    // පාවෙන බුබුළු (Bubbles)
-    const bubbleGeo = new THREE.SphereGeometry(0.05, 8, 8);
-    const bubbleMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
-    for(let i=0; i<150; i++) {
-        const bubble = new THREE.Mesh(bubbleGeo, bubbleMat);
-        bubble.position.set(Math.random()*60-30, Math.random()*20, Math.random()*60-30);
-        scene.add(bubble);
-    }
+function createSky() {
+    // පොළොව වෙනුවට පල්ලෙහායින් පෙනෙන වලාකුළු තට්ටුවක්
+    const cloudGeo = new THREE.PlaneGeometry(500, 500);
+    const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+    const clouds = new THREE.Mesh(cloudGeo, cloudMat);
+    clouds.rotation.x = -Math.PI / 2;
+    clouds.position.y = -10;
+    scene.add(clouds);
 }
 
-// වචන පෙට්ටි උඩ පෙන්වීමට භාවිතා කරන Function එක
+function createJet() {
+    // සරල 3D Jet යානයක හැඩයක් (Body + Wings)
+    jetModel = new THREE.Group();
+    
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2, 8), new THREE.MeshStandardMaterial({color: 0xdddddd}));
+    body.rotation.x = -Math.PI / 2;
+    jetModel.add(body);
+
+    const wings = new THREE.Mesh(new THREE.BoxGeometry(3, 0.1, 1), new THREE.MeshStandardMaterial({color: 0x4f46e5}));
+    jetModel.add(wings);
+
+    scene.add(jetModel);
+}
+
+function spawnAeroGate(x, y, z, wordObj) {
+    const torusGeo = new THREE.TorusGeometry(2, 0.1, 16, 100);
+    const torusMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const gate = new THREE.Mesh(torusGeo, torusMat);
+    gate.position.set(x, y, z);
+    
+    // කොරියානු වචනය වළල්ල මැදට දැමීම
+    const label = createTextLabel(wordObj.korean);
+    gate.add(label);
+    
+    gate.userData = wordObj;
+    scene.add(gate);
+    aeroGates.push(gate);
+}
+
 function createTextLabel(text) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 256;
-    canvas.height = 128;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-    ctx.fillRect(0, 0, 256, 128);
-    ctx.font = 'Bold 40px Arial';
-    ctx.fillStyle = '#00ffff';
+    canvas.width = 256; canvas.height = 128;
+    ctx.font = 'Bold 50px Arial';
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.fillText(text, 128, 64);
-
     const texture = new THREE.CanvasTexture(canvas);
-    const spriteMat = new THREE.SpriteMaterial({ map: texture });
-    const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(2, 1, 1);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
+    sprite.scale.set(3, 1.5, 1);
     return sprite;
-}
-
-function spawnTreasure(x, z, wordObj) {
-    // Treasure Chest Mesh
-    const chestGroup = new THREE.Group();
-    
-    const boxGeo = new THREE.BoxGeometry(1.2, 0.8, 0.8);
-    const boxMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.5 });
-    const chest = new THREE.Mesh(boxGeo, boxMat);
-    chestGroup.add(chest);
-
-    // වචනය පෙට්ටිය උඩට එකතු කිරීම
-    const label = createTextLabel(wordObj.korean);
-    label.position.y = 1.2;
-    chestGroup.add(label);
-
-    chestGroup.position.set(x, 0.4, z);
-    chestGroup.userData = wordObj;
-    
-    scene.add(chestGroup);
-    treasureChests.push(chestGroup);
 }
 
 function setupJoystick() {
@@ -102,7 +91,7 @@ function setupJoystick() {
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '80px', bottom: '80px' },
-        color: 'cyan'
+        color: 'white'
     });
     manager.on('move', (e, data) => { moveData.x = data.vector.x; moveData.y = data.vector.y; });
     manager.on('end', () => { moveData.x = 0; moveData.y = 0; });
@@ -110,23 +99,34 @@ function setupJoystick() {
 
 function animate() {
     requestAnimationFrame(animate);
-    const time = clock.getElapsedTime();
+    const delta = clock.getDelta();
 
-    // 1. Floating Camera Effect
-    camera.position.y += Math.sin(time * 0.5) * 0.003;
+    // Jet එක නිතරම ඉදිරියට පියාසර කරයි (Constant speed)
+    const speed = 0.2;
+    jetModel.position.z -= speed;
+    camera.position.z -= speed;
 
-    // 2. Player Movement
-    if (moveData.y !== 0 || moveData.x !== 0) {
-        camera.rotation.y -= moveData.x * 0.04;
-        let moveDir = new THREE.Vector3(0, 0, -moveData.y).applyQuaternion(camera.quaternion);
-        camera.position.addScaledVector(moveDir, 0.12);
+    // Joystick මගින් Jet එක පාලනය (වමට, දකුණට, උඩට, පල්ලෙහාට)
+    if (moveData.x !== 0) {
+        jetModel.position.x += moveData.x * 0.15;
+        jetModel.rotation.z = -moveData.x * 0.5; // ඇලවීම (Banking)
+        camera.position.x = jetModel.position.x;
+    }
+    if (moveData.y !== 0) {
+        jetModel.position.y += moveData.y * 0.15;
+        camera.position.y = jetModel.position.y + 2;
     }
 
-    // 3. Collision Check (Chest එකක් ළඟට ගිය විට)
-    treasureChests.forEach((group, index) => {
-        if (camera.position.distanceTo(group.position) < 2) {
-            if (group.userData.korean === currentTarget.korean) {
-                handleCorrect(group, index);
+    // වළලු හරහා යාම පරීක්ෂා කිරීම
+    aeroGates.forEach((gate, index) => {
+        if (jetModel.position.distanceTo(gate.position) < 2.5) {
+            if (gate.userData.korean === currentTarget.korean) {
+                console.log("Correct!");
+                scene.remove(gate);
+                aeroGates.splice(index, 1);
+                setNewTarget();
+                // ඊළඟ වළලු ටික ඈතින් පෙන්වමු
+                spawnAeroGate(Math.random()*10-5, Math.random()*10-5, jetModel.position.z - 40, dataset[Math.floor(Math.random()*dataset.length)]);
             }
         }
     });
@@ -134,47 +134,21 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-function handleCorrect(group, index) {
-    // නිවැරදි නම් පෙට්ටිය අතුරුදහන් වී අලුත් එකක් දීම
-    scene.remove(group);
-    treasureChests.splice(index, 1);
-    score += 10;
-    
-    // අලුත් වචනයක් තෝරාගැනීම
-    setNewTarget();
-    
-    // පොඩි feedback එකක්
-    const wordDisplay = document.getElementById('word');
-    wordDisplay.style.color = '#10b981';
-    setTimeout(() => { wordDisplay.style.color = '#38bdf8'; }, 1000);
-}
-
 async function fetchWords() {
-    try {
-        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=Level 1`);
-        dataset = await res.json();
-        
-        // පෙට්ටි 15ක් random තැන්වල පෙන්වීම
-        for(let i=0; i<15; i++) {
-            if(dataset[i]) {
-                spawnTreasure(Math.random()*40-20, Math.random()*40-20, dataset[i]);
-            }
-        }
-
-        document.getElementById('loader').style.display = 'none';
-        setNewTarget();
-    } catch(e) { console.error("Data Sync Failed"); }
+    const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=Level 1`);
+    dataset = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    
+    // මූලික වළලු කිහිපයක් පෙන්වීම
+    for(let i=0; i<5; i++) {
+        spawnAeroGate(Math.random()*10-5, Math.random()*10-5, -20 - (i*30), dataset[i]);
+    }
+    setNewTarget();
 }
 
 function setNewTarget() {
-    if(dataset.length === 0) return;
     currentTarget = dataset[Math.floor(Math.random() * dataset.length)];
     document.getElementById('word').innerText = currentTarget.english;
 }
 
 window.onload = init;
-window.onresize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-};
