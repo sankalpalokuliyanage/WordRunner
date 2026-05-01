@@ -6,7 +6,6 @@ let totalScore = 0;
 let roundCorrectCount = 0;
 let selectedLevel = "";
 
-// Level එක තෝරාගත් පසු ගේම් එක ආරම්භ කිරීම
 async function startGame(level) {
     selectedLevel = level;
     document.getElementById('level-screen').style.display = 'none';
@@ -17,31 +16,37 @@ async function startGame(level) {
 
 async function fetchWords() {
     try {
-        // තෝරාගත් level එක parameter එකක් ලෙස එවයි
-        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${selectedLevel}`);
+        // .trim() භාවිතා කර ඇත Sheet නාමයේ ඇති විය හැකි හිස්තැන් ඉවත් කිරීමට
+        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${selectedLevel.trim()}`);
         dataset = await res.json();
         
         if(dataset && dataset.length > 0) {
             document.getElementById('loader').style.display = 'none';
             renderMatchBoard();
         } else {
-            alert("No words found for this level!");
+            alert(selectedLevel + " සඳහා දත්ත හමු වූයේ නැත.\nකරුණාකර Sheet එකේ Headers පරීක්ෂා කරන්න.");
             location.reload();
         }
     } catch (e) { 
         console.error(e);
-        alert("Connection Error!");
+        alert("Connection Error! Please check your internet.");
+        location.reload();
     }
 }
 
 function renderMatchBoard() {
     const enList = document.getElementById('en-list');
     const koList = document.getElementById('ko-list');
-    enList.innerHTML = ""; koList.innerHTML = "";
+    
+    enList.innerHTML = ""; 
+    koList.innerHTML = "";
     selectedEn = null;
     roundCorrectCount = 0;
 
-    let roundData = [...dataset].sort(() => 0.5 - Math.random()).slice(0, 6);
+    // වචන 6ක් තෝරා ගැනීම (දත්ත 6කට වඩා තිබේ නම් පමණක්)
+    let limit = Math.min(dataset.length, 6);
+    let roundData = [...dataset].sort(() => 0.5 - Math.random()).slice(0, limit);
+    
     let enSide = [...roundData].sort(() => 0.5 - Math.random());
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
 
@@ -61,22 +66,27 @@ function renderMatchBoard() {
         let btn = document.createElement('div');
         btn.className = 'word-btn';
         btn.innerText = data.korean;
-        btn.onclick = () => handleMatch(btn, data.korean);
+        btn.onclick = () => handleMatch(btn, data.korean, limit);
         koList.appendChild(btn);
     });
 }
 
-function handleMatch(btn, koText) {
+function handleMatch(btn, koText, currentLimit) {
     if (!selectedEn) return;
 
     if (selectedEn.matchId === koText) {
         btn.classList.add('correct');
         selectedEn.btn.classList.add('correct');
+        
         totalScore += 10;
         roundCorrectCount++;
         document.getElementById('total-score').innerText = totalScore;
+        
         selectedEn = null;
-        if (roundCorrectCount === 6) setTimeout(showScoreModal, 500);
+        
+        if (roundCorrectCount === currentLimit) {
+            setTimeout(showScoreModal, 500);
+        }
     } else {
         btn.classList.add('wrong');
         setTimeout(() => btn.classList.remove('wrong'), 400);
