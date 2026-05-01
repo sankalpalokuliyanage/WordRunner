@@ -79,7 +79,10 @@
             align-items: center; justify-content: center; z-index: 6000;
         }
 
+        /* Animations */
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-4px);} 75% {transform: translateX(4px);} }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         footer { padding: 10px; text-align: center; font-size: 10px; opacity: 0.4; }
     </style>
 </head>
@@ -131,8 +134,6 @@
 <footer>DEVELOPED BY SANKALPA LOKULIYANAGE</footer>
 
 <script src="game.js"></script>
-<script>
-    @keyframes spin { to { transform: rotate(360deg); } }
-</script>
+
 </body>
 </html>
