@@ -5,73 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOPIK Master | Space Station</title>
     <style>
-        :root { --neon-blue: #00f2ff; --neon-pink: #ff00ff; --bg-dark: #000a12; --panel: rgba(0, 18, 32, 0.9); }
-        body { margin: 0; background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; }
-        
-        /* Login Screen */
-        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #001a2c 0%, #000a12 100%); z-index: 9000; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: var(--panel); border: 2px solid var(--neon-blue); padding: 35px; border-radius: 30px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
-        .auth-input { background: rgba(255,255,255,0.05); border: 1px solid #1e3a4f; color: white; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
-        .btn-glow { background: var(--neon-blue); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        :root { 
+            --neon-blue: #00f2ff; 
+            --neon-pink: #ff00ff; 
+            --bg-dark: #000a12; 
+            --panel: rgba(0, 18, 32, 0.9); 
+        }
 
-        /* Dashboard Header */
-        header { padding: 15px; border-bottom: 2px solid var(--neon-blue); background: var(--panel); display: flex; justify-content: space-between; align-items: center; }
-        .pilot-info { display: flex; align-items: center; gap: 10px; }
-        .rank-badge { font-size: 9px; background: var(--neon-pink); padding: 2px 8px; border-radius: 5px; text-transform: uppercase; }
+        body { 
+            margin: 0; 
+            background: var(--bg-dark); 
+            color: white; 
+            font-family: 'Segoe UI', -apple-system, sans-serif; 
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
 
-        /* Level Grid */
-        #level-screen { position: fixed; inset: 0; background: var(--bg-dark); z-index: 5000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 85%; max-width: 400px; margin-top: 20px; }
-        .level-btn { background: rgba(0,242,255,0.05); border: 1px solid var(--neon-blue); color: white; padding: 25px 10px; border-radius: 15px; font-weight: bold; text-align: center; cursor: pointer; }
+        /* --- AUTH SCREEN (Center Aligned) --- */
+        #auth-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: radial-gradient(circle at center, #001a2c 0%, #000a12 100%); 
+            z-index: 9000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+        }
 
-        /* Game Area */
-        #game-container { display: flex; padding: 15px; gap: 12px; align-items: center; max-width: 500px; margin: auto; height: 70vh; }
-        .column { display: flex; flex-direction: column; gap: 12px; width: 50%; }
-        .word-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,255,0.2); color: white; padding: 18px 5px; border-radius: 15px; text-align: center; font-size: 14px; transition: 0.3s; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .word-btn.active { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); transform: scale(1.05); }
-        .word-btn.correct { opacity: 0; transform: scale(0.5); pointer-events: none; transition: 0.5s; }
-        .word-btn.wrong { background: #ff0055; animation: shake 0.3s; }
+        .auth-card { 
+            background: var(--panel); 
+            border: 2px solid var(--neon-blue); 
+            padding: 30px 20px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: center; 
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); 
+            backdrop-filter: blur(10px);
+        }
 
-        /* Loader & Modals */
-        #loader { position: fixed; inset: 0; background: var(--bg-dark); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        #score-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 8000; }
+        .auth-input { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid #1e3a4f; 
+            color: white; 
+            padding: 14px; 
+            border-radius: 12px; 
+            width: 100%; 
+            margin-bottom: 12px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* iOS zoom issue fix */
+        }
+
+        .btn-glow { 
+            background: var(--neon-blue); 
+            color: black; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 12px; 
+            font-weight: 900; 
+            width: 100%; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            transition: 0.2s;
+        }
+
+        .btn-glow:active { transform: scale(0.98); }
+
+        /* --- HEADER --- */
+        header { 
+            padding: 15px 20px; 
+            border-bottom: 1px solid rgba(0, 242, 255, 0.3); 
+            background: var(--panel); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .rank-badge { 
+            font-size: 9px; 
+            background: var(--neon-pink); 
+            color: white;
+            padding: 2px 8px; 
+            border-radius: 5px; 
+            text-transform: uppercase; 
+            font-weight: bold;
+        }
+
+        /* --- LEVEL SCREEN (Center Aligned) --- */
+        #level-screen { 
+            flex: 1;
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+        }
+
+        .level-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            width: 100%; 
+            max-width: 380px; 
+            margin: 20px 0;
+        }
+
+        .level-btn { 
+            background: rgba(0,242,255,0.05); 
+            border: 1px solid var(--neon-blue); 
+            color: white; 
+            padding: 20px 10px; 
+            border-radius: 16px; 
+            font-weight: bold; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+
+        /* --- GAME AREA (Center Aligned) --- */
+        #game-area {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            justify-content: center; /* Vertical center */
+            padding: 10px;
+        }
+
+        #game-container { 
+            display: flex; 
+            padding: 0; 
+            gap: 10px; 
+            width: 100%;
+            max-width: 500px; 
+            margin: 0 auto;
+        }
+
+        .column { 
+            flex: 1;
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        .word-btn { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(0,242,255,0.2); 
+            color: white; 
+            padding: 15px 5px; 
+            border-radius: 14px; 
+            text-align: center; 
+            font-size: 13px; 
+            transition: 0.3s; 
+            min-height: 55px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .word-btn.active { 
+            background: var(--neon-blue); 
+            color: black; 
+            box-shadow: 0 0 15px var(--neon-blue); 
+            transform: scale(1.03); 
+        }
+
+        .word-btn.correct { 
+            opacity: 0; 
+            transform: translateY(-10px); 
+            pointer-events: none; 
+            transition: 0.5s; 
+        }
+
+        .word-btn.wrong { 
+            background: #ff0055; 
+            animation: shake 0.3s; 
+        }
+
+        /* --- MODALS & LOADERS --- */
+        #loader { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg-dark); 
+            z-index: 9999; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        #score-modal { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.9); 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 8000; 
+            padding: 20px;
+        }
         
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-4px);} 75% {transform: translateX(4px);} }
         @keyframes spin { to { transform: rotate(360deg); } }
         .hidden { display: none !important; }
+
+        footer {
+            padding: 10px;
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.4;
+            background: var(--bg-dark);
+        }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h2 style="color: var(--neon-blue); letter-spacing: 2px;">SPACE LOGIN</h2>
-        <p style="font-size: 11px; opacity: 0.6; margin-bottom: 25px;">Enter your credentials to board the station</p>
+        <h2 style="color: var(--neon-blue); letter-spacing: 2px; margin-top: 0;">SPACE LOGIN</h2>
+        <p style="font-size: 11px; opacity: 0.6; margin-bottom: 25px;">Enter credentials to board the station</p>
         <input type="text" id="auth-user" class="auth-input" placeholder="Pilot Username">
         <input type="password" id="auth-pass" class="auth-input" placeholder="Access Code">
         <button class="btn-glow" onclick="handleAuth('login')">Login</button>
-        <div style="margin: 15px 0; font-size: 12px; opacity: 0.5;">OR</div>
+        <div style="margin: 12px 0; font-size: 12px; opacity: 0.5;">OR</div>
         <button class="btn-glow" style="background: none; border: 1px solid var(--neon-blue); color: white;" onclick="handleAuth('signup')">Create New ID</button>
     </div>
 </div>
 
-<div id="loader"><div style="width:40px;height:40px;border:4px solid var(--neon-blue);border-top-color:transparent;border-radius:50%;animation:spin 1s infinite linear;"></div></div>
+<div id="loader">
+    <div style="width:40px;height:40px;border:4px solid var(--neon-blue);border-top-color:transparent;border-radius:50%;animation:spin 1s infinite linear;"></div>
+    <p style="font-size: 12px; margin-top: 15px; color: var(--neon-blue);">SYNCING DATA...</p>
+</div>
 
 <header id="main-header" class="hidden">
     <div class="pilot-info">
         <div style="text-align: left;">
-            <div id="user-display" style="font-weight: 900; font-size: 14px;">PILOT</div>
+            <div id="user-display" style="font-weight: 900; font-size: 14px; letter-spacing: 1px;">PILOT</div>
             <div id="rank-display" class="rank-badge">TRAINEE</div>
         </div>
     </div>
     <div style="text-align: right;">
-        <span style="font-size: 10px; color: var(--neon-blue); display: block;">TOTAL SCORE</span>
+        <span style="font-size: 9px; color: var(--neon-blue); display: block; letter-spacing: 1px;">TOTAL SCORE</span>
         <span id="total-score-display" style="font-size: 20px; font-weight: 900;">0</span>
     </div>
 </header>
 
 <div id="level-screen">
-    <h3 style="color: var(--neon-blue); letter-spacing: 5px;">SELECT MISSION</h3>
+    <h3 style="color: var(--neon-blue); letter-spacing: 5px; margin-top: 0;">SELECT MISSION</h3>
     <div class="level-grid">
         <div class="level-btn" onclick="startMission('Level 1')">LEVEL 1</div>
         <div class="level-btn" onclick="startMission('Level 2')">LEVEL 2</div>
@@ -80,10 +265,10 @@
         <div class="level-btn" onclick="startMission('Level 5')">LEVEL 5</div>
         <div class="level-btn" onclick="startMission('Level 6')">LEVEL 6</div>
     </div>
-    <button onclick="logout()" style="margin-top: 30px; background: none; border: none; color: gray; font-size: 12px;">LOGOUT</button>
+    <button onclick="logout()" style="margin-top: 30px; background: none; border: none; color: #555; font-size: 11px; cursor: pointer;">[ LOGOUT ]</button>
 </div>
 
-<div id="game-area" class="hidden">
+<div id="game-area">
     <div id="game-container">
         <div class="column" id="en-list"></div>
         <div class="column" id="ko-list"></div>
@@ -92,12 +277,14 @@
 
 <div id="score-modal">
     <div class="auth-card" style="max-width: 300px;">
-        <h4 style="color: var(--neon-blue); margin: 0;">MISSION SUCCESS</h4>
-        <h1 id="round-score-display" style="font-size: 60px; margin: 10px 0;">+0</h1>
+        <h4 style="color: var(--neon-blue); margin: 0; letter-spacing: 2px;">MISSION SUCCESS</h4>
+        <h1 id="round-score-display" style="font-size: 50px; margin: 15px 0; color: white;">+0</h1>
         <button class="btn-glow" onclick="nextRound()">Next Round</button>
-        <button class="btn-glow" style="margin-top: 10px; background: none; color: white;" onclick="backToMenu()">Dashboard</button>
+        <button class="btn-glow" style="margin-top: 10px; background: none; color: white; border: 1px solid rgba(255,255,255,0.2);" onclick="backToMenu()">Dashboard</button>
     </div>
 </div>
+
+<footer>DEVELOPED BY SANKALPA LOKULIYANAGE</footer>
 
 <script src="game.js"></script>
 </body>
