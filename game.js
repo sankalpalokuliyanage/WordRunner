@@ -69,7 +69,7 @@ async function startMission(level) {
         renderBoard();
         startOxygen();
     } else {
-        alert("Sector data is empty! Please add words first.");
+        alert("This level not completed yet. Stay Tuned with us. Thank You");
         exitGame();
     }
 }
