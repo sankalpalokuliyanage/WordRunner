@@ -2,10 +2,8 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxenP37pvmwucpQ2LFPk
 
 let dataset = [];
 let selectedEn = null;
-let score = 0;
-let totalAttempts = 0;
-let correctMatches = 0;
-let currentRank = "BEGINNER";
+let totalScore = 0;
+let roundCorrectCount = 0;
 
 async function init() {
     await fetchWords();
@@ -27,7 +25,9 @@ function renderMatchBoard() {
     const koList = document.getElementById('ko-list');
     enList.innerHTML = ""; koList.innerHTML = "";
     selectedEn = null;
+    roundCorrectCount = 0;
 
+    // වචන 6ක් තෝරා ගැනීම
     let roundData = dataset.sort(() => 0.5 - Math.random()).slice(0, 6);
     let enSide = [...roundData].sort(() => 0.5 - Math.random());
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
@@ -55,58 +55,35 @@ function renderMatchBoard() {
 
 function handleMatch(btn, koText) {
     if (!selectedEn) return;
-    totalAttempts++;
 
     if (selectedEn.matchId === koText) {
         btn.classList.add('correct');
         selectedEn.btn.classList.add('correct');
-        score += 10;
-        correctMatches++;
-        updateStats();
+        
+        totalScore += 10;
+        roundCorrectCount++;
+        document.getElementById('total-score').innerText = totalScore;
+        
         selectedEn = null;
-        checkLevelUp();
-        checkNextRound();
+        
+        // වටය අවසන් දැයි පරීක්ෂා කිරීම (වචන 6ම ඉවර නම්)
+        if (roundCorrectCount === 6) {
+            showScoreModal();
+        }
     } else {
         btn.classList.add('wrong');
-        score = Math.max(0, score - 2); // වැරදුණොත් ලකුණු 2ක් අඩු වේ
-        updateStats();
         setTimeout(() => btn.classList.remove('wrong'), 400);
     }
 }
 
-function updateStats() {
-    document.getElementById('score').innerText = score;
-    let acc = Math.round((correctMatches / totalAttempts) * 100);
-    document.getElementById('accuracy').innerText = acc + "%";
+function showScoreModal() {
+    document.getElementById('round-score').innerText = totalScore;
+    document.getElementById('score-modal').style.display = "flex";
 }
 
-function checkLevelUp() {
-    let newRank = "BEGINNER";
-    if (score >= 500) newRank = "MASTER";
-    else if (score >= 300) newRank = "EXPERT";
-    else if (score >= 150) newRank = "INTERMEDIATE";
-    else if (score >= 50) newRank = "AMATEUR";
-
-    if (newRank !== currentRank) {
-        currentRank = newRank;
-        showRankModal(newRank);
-    }
-    document.getElementById('rank-text').innerText = currentRank;
-}
-
-function showRankModal(rank) {
-    document.getElementById('modal-rank').innerText = rank + "!";
-    document.getElementById('modal-msg').innerText = "ඔබේ TOPIK මට්ටම දැන් " + rank + " දක්වා ඉහළ ගියා.";
-    document.getElementById('rank-modal').style.display = "block";
-}
-
-function closeModal() {
-    document.getElementById('rank-modal').style.display = "none";
-}
-
-function checkNextRound() {
-    const rem = Array.from(document.querySelectorAll('.word-btn')).filter(b => !b.classList.contains('correct'));
-    if (rem.length === 0) setTimeout(renderMatchBoard, 600);
+function nextRound() {
+    document.getElementById('score-modal').style.display = "none";
+    renderMatchBoard();
 }
 
 window.onload = init;
