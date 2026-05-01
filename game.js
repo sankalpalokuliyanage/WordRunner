@@ -125,6 +125,8 @@ function renderBoard() {
                 document.getElementById('score-display').innerText = currentScore;
                 if(roundCount === limit) {
                     syncData();
+                    // --- මෙතැනදී Oxygen Level එක නැවත 100% කරනු ලබයි ---
+                    oxyLevel = 100; 
                     setTimeout(renderBoard, 800);
                 }
             } else {
