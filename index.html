@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOPIK Master | Universe</title>
+    <title>TOPIK WORD MASTER</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         /* CSS Variables for Themes */
@@ -54,16 +54,16 @@
 
 <div id="auth-screen" class="full-screen">
     <div class="cyber-card">
-        <h2 style="font-family: 'Orbitron'; color: var(--neon); margin-top: 0;">PILOT LOGIN</h2>
+        <h2 style="font-family: 'Orbitron'; color: var(--neon); margin-top: 0;">LOGIN</h2>
         <input type="text" id="auth-user" placeholder="Enter Username">
-        <input type="password" id="auth-pass" placeholder="Enter Access Code">
-        <button class="btn-neon" onclick="handleAuth('login')">INITIALIZE</button>
+        <input type="password" id="auth-pass" placeholder="Enter Password">
+        <button class="btn-neon" onclick="handleAuth('login')">LOGIN</button>
         <p style="font-size: 12px; margin: 15px 0; opacity: 0.5;">OR</p>
         <button class="btn-neon" style="background:none; border: 1px solid var(--neon); color: white;" onclick="handleAuth('signup')">CREATE NEW ID</button>
     </div>
 </div>
 
-<header id="hud" class="hidden">
+<header id="hud" class="hidden" style="margin-top: 8px;" >
     <div style="flex: 1;">
         <div id="rank-display" style="font-size: 9px; color: var(--neon); font-weight: bold;">BEGINNER CADET</div>
         <div id="user-display" style="font-size: 14px; font-weight: 900;">PILOT: ---</div>
@@ -75,21 +75,21 @@
     <div class="timer-track"><div id="oxygen-bar"></div></div>
 </header>
 
-<div id="dashboard">
+<div id="dashboard" style="margin-bottom: 8px;">
     <div class="theme-grid">
         <div class="theme-btn" style="background: #00f2ff;" onclick="changeTheme('dark')"></div>
         <div class="theme-btn" style="background: #bb86fc;" onclick="changeTheme('bts')"></div>
         <div class="theme-btn" style="background: #f8a5c2;" onclick="changeTheme('blackpink')"></div>
         <div class="theme-btn" style="background: #e67e22;" onclick="changeTheme('traditional')"></div>
     </div>
-    <h3 style="font-family: 'Orbitron'; letter-spacing: 4px; margin-bottom: 25px;">SELECT SECTOR</h3>
+    <h3 style="font-family: 'Orbitron'; letter-spacing: 4px; margin-bottom: 25px;">SELECT LEVEL</h3>
     <div class="level-grid">
-        <div class="level-card" onclick="startMission('Level 1')"><span class="lvl-label">SECTOR 1</span><div class="lvl-name">Beginner I</div></div>
-        <div class="level-card" onclick="startMission('Level 2')"><span class="lvl-label">SECTOR 2</span><div class="lvl-name">Beginner II</div></div>
-        <div class="level-card" onclick="startMission('Level 3')"><span class="lvl-label">SECTOR 3</span><div class="lvl-name">Explorer I</div></div>
-        <div class="level-card" onclick="startMission('Level 4')"><span class="lvl-label">SECTOR 4</span><div class="lvl-name">Explorer II</div></div>
-        <div class="level-card" onclick="startMission('Level 5')"><span class="lvl-label">SECTOR 5</span><div class="lvl-name">Commander I</div></div>
-        <div class="level-card" onclick="startMission('Level 6')"><span class="lvl-label">SECTOR 6</span><div class="lvl-name">Commander II</div></div>
+        <div class="level-card" onclick="startMission('Level 1')"><span class="lvl-label">LEVEL 1</span><div class="lvl-name">Beginner I</div></div>
+        <div class="level-card" onclick="startMission('Level 2')"><span class="lvl-label">LEVEL 2</span><div class="lvl-name">Beginner II</div></div>
+        <div class="level-card" onclick="startMission('Level 3')"><span class="lvl-label">LEVEL 3</span><div class="lvl-name">Explorer I</div></div>
+        <div class="level-card" onclick="startMission('Level 4')"><span class="lvl-label">LEVEL 4</span><div class="lvl-name">Explorer II</div></div>
+        <div class="level-card" onclick="startMission('Level 5')"><span class="lvl-label">LEVEL 5</span><div class="lvl-name">Commander I</div></div>
+        <div class="level-card" onclick="startMission('Level 6')"><span class="lvl-label">LEVEL 6</span><div class="lvl-name">Commander II</div></div>
     </div>
     <button onclick="location.reload()" style="margin-top: 40px; background: none; border: none; color: #444; cursor: pointer;">[ LOGOUT ]</button>
 </div>
