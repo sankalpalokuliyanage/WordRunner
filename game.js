@@ -1,15 +1,15 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDcdTMXOmcNWlef_Xy8P3UhPW2vRdrasEzLa7Jyf5BRe6ocZq22KgfqIfEG7TCPtQt/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydfsIkChPLVPpIuRG1N9ydr7jVFMSo_k0KT8E2V_yikxz8dou_rl1BTXyp3vRBGdDbwA/exec';
 
-let currentUser = null, currentScore = 0, dataset = [];
-let selectedEn = null, roundCorrectCount = 0;
-let oxygenInterval = null, oxygenLevel = 100;
+let currentUser = null, currentScore = 0, currentTheme = 'dark';
+let dataset = [], selectedEn = null, roundCount = 0;
+let oxyTimer = null, oxyLevel = 100;
 
 // --- AUTHENTICATION ---
 async function handleAuth(type) {
     const user = document.getElementById('auth-user').value.trim();
     const pass = document.getElementById('auth-pass').value.trim();
-    if(!user || !pass) return alert("Fill all fields!");
-    
+    if(!user || !pass) return alert("Please enter both username and password!");
+
     try {
         if(type === 'login') {
             const res = await fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`);
@@ -17,55 +17,73 @@ async function handleAuth(type) {
             if(data.status === 'success') {
                 currentUser = user; 
                 currentScore = parseInt(data.totalScore);
-                showLevelScreen();
-            } else alert("Access Denied!");
+                currentTheme = data.theme || 'dark';
+                changeTheme(currentTheme);
+                initDashboard(data.rank);
+            } else {
+                alert("Login failed! Invalid credentials.");
+            }
         } else {
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: new URLSearchParams({ action: 'signup', username: user, password: pass }), 
-                mode: 'no-cors' 
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: new URLSearchParams({ action: 'signup', username: user, password: pass, theme: 'dark' }),
+                mode: 'cors'
             });
-            alert("Registered Successfully! Now Login.");
+            const result = await res.text();
+            if(result === "Username Exists") alert("This username is already taken! Try another one.");
+            else alert("Account created successfully! You can now login.");
         }
-    } catch (e) { alert("Comm Error!"); }
+    } catch (e) { alert("Server communication error! Check your internet."); }
 }
 
-function showLevelScreen() {
+function initDashboard(rank) {
     document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('level-screen').classList.remove('hidden');
     document.getElementById('hud').classList.remove('hidden');
+    document.getElementById('dashboard').style.display = 'flex';
     document.getElementById('user-display').innerText = "PILOT: " + currentUser.toUpperCase();
-    document.getElementById('total-score-display').innerText = currentScore;
+    document.getElementById('score-display').innerText = currentScore;
+    document.getElementById('rank-display').innerText = rank.toUpperCase();
+}
+
+// --- THEME ENGINE ---
+function changeTheme(theme) {
+    document.body.className = "theme-" + theme;
+    currentTheme = theme;
+    if(currentUser) {
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: new URLSearchParams({ action: 'updateUser', username: currentUser, theme: theme }),
+            mode: 'no-cors'
+        });
+    }
 }
 
 // --- MISSION LOGIC ---
 async function startMission(level) {
-    document.getElementById('level-screen').classList.add('hidden');
+    document.getElementById('dashboard').style.display = 'none';
     const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${level}`);
     dataset = await res.json();
+    
     if(dataset.length > 0) {
         document.getElementById('game-area').style.display = 'flex';
         renderBoard();
-        startOxygenTimer();
+        startOxygen();
     } else {
-        alert("Sector data empty!");
-        backToMenu();
+        alert("Sector data is empty! Please add words first.");
+        exitGame();
     }
 }
 
-// තත්පර 30ක කාල සීමාව (Time Limit)
-function startOxygenTimer() {
-    oxygenLevel = 100;
-    clearInterval(oxygenInterval);
-    // තත්පර 30කින් ඉවර වෙන්න නම් (100 / 30 = 3.33 per second)
-    oxygenInterval = setInterval(() => {
-        oxygenLevel -= (100 / 30) / 10; // සෑම මිලි තත්පර 100කටම වරක් අඩුවේ
-        document.getElementById('oxygen-fill').style.width = oxygenLevel + "%";
-        
-        if(oxygenLevel <= 0) {
-            clearInterval(oxygenInterval);
-            alert("OXYGEN DEPLETED! MISSION FAILED.");
-            backToMenu();
+function startOxygen() {
+    oxyLevel = 100;
+    clearInterval(oxyTimer);
+    oxyTimer = setInterval(() => {
+        oxyLevel -= (100 / 30) / 10; // 30 Seconds
+        document.getElementById('oxygen-bar').style.width = oxyLevel + "%";
+        if(oxyLevel <= 0) {
+            clearInterval(oxyTimer);
+            alert("MISSION FAILED! Oxygen depleted.");
+            exitGame();
         }
     }, 100);
 }
@@ -73,8 +91,7 @@ function startOxygenTimer() {
 function renderBoard() {
     const enList = document.getElementById('en-list'), koList = document.getElementById('ko-list');
     enList.innerHTML = ""; koList.innerHTML = "";
-    selectedEn = null;
-    roundCorrectCount = 0;
+    selectedEn = null; roundCount = 0;
 
     let limit = Math.min(dataset.length, 6);
     let roundData = [...dataset].sort(() => 0.5 - Math.random()).slice(0, limit);
@@ -82,55 +99,54 @@ function renderBoard() {
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
 
     enSide.forEach(d => {
-        let btn = document.createElement('div'); btn.className = 'word-node'; btn.innerText = d.english;
-        btn.onclick = () => { 
-            document.querySelectorAll('#en-list .word-node').forEach(b => b.classList.remove('active')); 
-            btn.classList.add('active'); 
-            selectedEn = { btn, id: d.korean }; 
+        let node = document.createElement('div');
+        node.className = 'node';
+        node.innerText = d.english;
+        node.onclick = () => {
+            document.querySelectorAll('#en-list .node').forEach(n => n.classList.remove('active'));
+            node.classList.add('active');
+            selectedEn = { node, id: d.korean };
         };
-        enList.appendChild(btn);
+        enList.appendChild(node);
     });
 
     koSide.forEach(d => {
-        let btn = document.createElement('div'); btn.className = 'word-node'; btn.innerText = d.korean;
-        btn.onclick = () => {
+        let node = document.createElement('div');
+        node.className = 'node';
+        node.innerText = d.korean;
+        node.onclick = () => {
             if(!selectedEn) return;
             if(selectedEn.id === d.korean) {
-                btn.classList.add('correct'); 
-                selectedEn.btn.classList.add('correct');
-                roundCorrectCount++; 
-                currentScore += 10; 
-                oxygenLevel = Math.min(100, oxygenLevel + 5); // Bonus oxygen
-                document.getElementById('total-score-display').innerText = currentScore;
-                
-                if(roundCorrectCount === limit) { 
-                    syncScore(); // ලකුණු Sheet එකට යැවීම
-                    setTimeout(renderBoard, 1000); 
+                node.classList.add('correct');
+                selectedEn.node.classList.add('correct');
+                currentScore += 10;
+                roundCount++;
+                oxyLevel = Math.min(100, oxyLevel + 5); // Bonus oxygen
+                document.getElementById('score-display').innerText = currentScore;
+                if(roundCount === limit) {
+                    syncData();
+                    setTimeout(renderBoard, 800);
                 }
-            } else { 
-                btn.classList.add('wrong'); 
-                oxygenLevel -= 10; // Penalty oxygen
+            } else {
+                node.classList.add('wrong');
+                oxyLevel -= 10; // Penalty
+                setTimeout(() => node.classList.remove('wrong'), 400);
             }
         };
-        koList.appendChild(btn);
+        koList.appendChild(node);
     });
 }
 
-// --- SCORE SYNC ---
-function syncScore() {
-    fetch(`${SCRIPT_URL}`, {
+function syncData() {
+    fetch(SCRIPT_URL, {
         method: 'POST',
-        body: new URLSearchParams({ 
-            action: 'updateScore', 
-            username: currentUser, 
-            newScore: currentScore 
-        }),
+        body: new URLSearchParams({ action: 'updateUser', username: currentUser, newScore: currentScore }),
         mode: 'no-cors'
     });
 }
 
-function backToMenu() {
-    clearInterval(oxygenInterval);
+function exitGame() {
+    clearInterval(oxyTimer);
     document.getElementById('game-area').style.display = 'none';
-    document.getElementById('level-screen').classList.remove('hidden');
+    document.getElementById('dashboard').style.display = 'flex';
 }
