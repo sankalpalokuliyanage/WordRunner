@@ -4,20 +4,34 @@ let dataset = [];
 let selectedEn = null;
 let totalScore = 0;
 let roundCorrectCount = 0;
+let selectedLevel = "";
 
-async function init() {
+// Level එක තෝරාගත් පසු ගේම් එක ආරම්භ කිරීම
+async function startGame(level) {
+    selectedLevel = level;
+    document.getElementById('level-screen').style.display = 'none';
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('current-lvl-display').innerText = level.toUpperCase();
     await fetchWords();
 }
 
 async function fetchWords() {
     try {
-        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=Level 1`);
+        // තෝරාගත් level එක parameter එකක් ලෙස එවයි
+        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${selectedLevel}`);
         dataset = await res.json();
-        if(dataset.length > 0) {
+        
+        if(dataset && dataset.length > 0) {
             document.getElementById('loader').style.display = 'none';
             renderMatchBoard();
+        } else {
+            alert("No words found for this level!");
+            location.reload();
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e);
+        alert("Connection Error!");
+    }
 }
 
 function renderMatchBoard() {
@@ -27,8 +41,7 @@ function renderMatchBoard() {
     selectedEn = null;
     roundCorrectCount = 0;
 
-    // වචන 6ක් තෝරා ගැනීම
-    let roundData = dataset.sort(() => 0.5 - Math.random()).slice(0, 6);
+    let roundData = [...dataset].sort(() => 0.5 - Math.random()).slice(0, 6);
     let enSide = [...roundData].sort(() => 0.5 - Math.random());
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
 
@@ -59,17 +72,11 @@ function handleMatch(btn, koText) {
     if (selectedEn.matchId === koText) {
         btn.classList.add('correct');
         selectedEn.btn.classList.add('correct');
-        
         totalScore += 10;
         roundCorrectCount++;
         document.getElementById('total-score').innerText = totalScore;
-        
         selectedEn = null;
-        
-        // වටය අවසන් දැයි පරීක්ෂා කිරීම (වචන 6ම ඉවර නම්)
-        if (roundCorrectCount === 6) {
-            showScoreModal();
-        }
+        if (roundCorrectCount === 6) setTimeout(showScoreModal, 500);
     } else {
         btn.classList.add('wrong');
         setTimeout(() => btn.classList.remove('wrong'), 400);
@@ -85,5 +92,3 @@ function nextRound() {
     document.getElementById('score-modal').style.display = "none";
     renderMatchBoard();
 }
-
-window.onload = init;
