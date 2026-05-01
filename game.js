@@ -1,5 +1,6 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDcdTMXOmcNWlef_Xy8P3UhPW2vRdrasEzLa7Jyf5BRe6ocZq22KgfqIfEG7TCPtQt/exec';
 
+
 let currentUser = null;
 let currentScore = 0;
 let currentRank = "";
@@ -7,12 +8,10 @@ let dataset = [];
 let selectedEn = null;
 let roundCorrectCount = 0;
 
-// --- AUTHENTICATION ---
 async function handleAuth(type) {
     const user = document.getElementById('auth-user').value.trim();
     const pass = document.getElementById('auth-pass').value.trim();
     if(!user || !pass) return alert("Fill all fields!");
-
     showLoader(true);
     try {
         if(type === 'login') {
@@ -20,15 +19,9 @@ async function handleAuth(type) {
             const data = await res.json();
             if(data.status === 'success') {
                 loginUser(user, data.totalScore, data.rank);
-            } else {
-                alert("Invalid Access Code!");
-            }
+            } else { alert("Invalid Credentials!"); }
         } else {
-            const res = await fetch(`${SCRIPT_URL}`, {
-                method: 'POST',
-                body: new URLSearchParams({ action: 'signup', username: user, password: pass }),
-                mode: 'no-cors'
-            });
+            await fetch(`${SCRIPT_URL}`, { method: 'POST', body: new URLSearchParams({ action: 'signup', username: user, password: pass }), mode: 'no-cors' });
             alert("Account Created! Please Login.");
         }
     } catch (e) { alert("Auth Error!"); }
@@ -39,11 +32,9 @@ function loginUser(user, score, rank) {
     currentUser = user;
     currentScore = parseInt(score);
     currentRank = rank;
-    
-    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('main-header').classList.remove('hidden');
     document.getElementById('level-screen').style.display = 'flex';
-    
     updateUI();
 }
 
@@ -53,7 +44,6 @@ function updateUI() {
     document.getElementById('total-score-display').innerText = currentScore;
 }
 
-// --- MISSION LOGIC ---
 async function startMission(level) {
     document.getElementById('level-screen').style.display = 'none';
     showLoader(true);
@@ -61,9 +51,9 @@ async function startMission(level) {
         const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${level}`);
         dataset = await res.json();
         if(dataset.length > 0) {
-            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('game-area').style.display = 'flex';
             renderBoard();
-        } else { alert("No data in this level!"); backToMenu(); }
+        } else { alert("No data!"); backToMenu(); }
     } catch (e) { alert("Fetch Error!"); }
     showLoader(false);
 }
@@ -112,29 +102,18 @@ function renderBoard() {
     });
 }
 
-async function finishRound() {
+function finishRound() {
     updateUI();
     document.getElementById('round-score-display').innerText = "+" + (roundCorrectCount * 10);
     document.getElementById('score-modal').style.display = 'flex';
-    
-    // Sync to Cloud
-    fetch(`${SCRIPT_URL}`, {
-        method: 'POST',
-        body: new URLSearchParams({ action: 'updateScore', username: currentUser, newScore: currentScore }),
-        mode: 'no-cors'
-    });
+    fetch(`${SCRIPT_URL}`, { method: 'POST', body: new URLSearchParams({ action: 'updateScore', username: currentUser, newScore: currentScore }), mode: 'no-cors' });
 }
 
-function nextRound() {
-    document.getElementById('score-modal').style.display = 'none';
-    renderBoard();
-}
-
+function nextRound() { document.getElementById('score-modal').style.display = 'none'; renderBoard(); }
 function backToMenu() {
     document.getElementById('score-modal').style.display = 'none';
-    document.getElementById('game-area').classList.add('hidden');
+    document.getElementById('game-area').style.display = 'none';
     document.getElementById('level-screen').style.display = 'flex';
 }
-
 function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
 function logout() { location.reload(); }
