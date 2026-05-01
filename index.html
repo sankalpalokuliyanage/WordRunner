@@ -3,133 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOPIK Master | Sankalpa's Terminal</title>
+    <title>TOPIK Advance Matcher</title>
     <style>
         :root {
             --neon-blue: #00f2ff;
-            --neon-purple: #bc13fe;
             --bg-dark: #000a12;
-            --correct: #10b981;
-            --wrong: #ef4444;
+            --panel-bg: rgba(0, 18, 32, 0.9);
         }
-        
         body {
-            margin: 0; padding: 0;
-            background: var(--bg-dark);
-            color: white;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex; flex-direction: column;
+            margin: 0; background: var(--bg-dark); color: white;
+            font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column;
             height: 100vh; overflow: hidden;
         }
-
-        /* Loading Screen Fix */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark);
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 2000;
-        }
-
-        .loader-ring {
-            width: 60px; height: 60px;
-            border: 4px solid rgba(0, 242, 255, 0.1);
-            border-top: 4px solid var(--neon-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
+        
+        /* Stats Panel */
         header {
-            padding: 15px;
+            padding: 15px; border-bottom: 2px solid var(--neon-blue);
+            background: var(--panel-bg); display: flex; justify-content: space-around;
             text-align: center;
-            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
-            background: rgba(0, 18, 32, 0.8);
         }
+        .stat-item { flex: 1; }
+        .label { font-size: 10px; color: var(--neon-blue); letter-spacing: 1px; }
+        .val { font-size: 18px; font-weight: bold; display: block; }
 
-        .topik-label {
-            font-size: 10px; color: var(--neon-purple);
-            letter-spacing: 3px; font-weight: bold; margin-bottom: 5px;
-        }
-
-        .score-box { font-size: 18px; font-weight: bold; color: var(--neon-blue); }
-
+        /* Game Board */
         #game-container {
-            flex: 1;
-            display: flex;
-            flex-direction: row; /* දෙපැත්තට තබා ගැනීම Portrait වලට සුදුසුයි */
-            justify-content: space-around;
-            padding: 10px;
-            gap: 10px;
+            flex: 1; display: flex; flex-direction: row;
+            padding: 10px; gap: 10px; align-items: center;
         }
-
-        .column {
-            display: flex; flex-direction: column;
-            gap: 12px; width: 48%;
-            justify-content: center;
-        }
-
+        .column { display: flex; flex-direction: column; gap: 12px; width: 48%; }
+        
         .word-btn {
-            background: rgba(0, 242, 255, 0.05);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            color: white;
-            padding: 18px 5px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.2);
+            color: white; padding: 18px 5px; border-radius: 12px;
+            text-align: center; font-size: 14px; transition: 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
+        .word-btn.active { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); }
+        .word-btn.correct { opacity: 0; transform: scale(0.5); pointer-events: none; }
+        .word-btn.wrong { background: #ef4444; border-color: #ef4444; animation: shake 0.3s; }
 
-        .word-btn.active {
-            background: var(--neon-blue);
-            color: black;
-            box-shadow: 0 0 15px var(--neon-blue);
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-4px);} 75% {transform: translateX(4px);} }
+
+        /* Rank Popup */
+        #rank-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--panel-bg); border: 2px solid var(--neon-blue);
+            padding: 25px; border-radius: 20px; text-align: center;
+            z-index: 3000; display: none; width: 80%;
         }
 
-        .word-btn.correct {
-            background: var(--correct);
-            border-color: var(--correct);
-            opacity: 0;
-            transform: scale(0.8);
-            pointer-events: none;
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 4000;
         }
 
-        .word-btn.wrong {
-            background: var(--wrong);
-            border-color: var(--wrong);
-            animation: shake 0.3s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-
-        footer {
-            padding: 10px;
-            text-align: center;
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .dev-name { color: var(--neon-blue); font-weight: bold; }
+        footer { padding: 10px; text-align: center; font-size: 11px; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
 <div id="loader">
-    <div class="loader-ring"></div>
-    <p style="margin-top: 15px; letter-spacing: 2px;">TOPIK DATA SYNC...</p>
+    <div style="width: 40px; height: 40px; border: 4px solid var(--neon-blue); border-top-color: transparent; border-radius: 50%; animation: spin 1s infinite linear;"></div>
+    <p>SYNCING PROGRESS...</p>
 </div>
 
 <header>
-    <div class="topik-label">TOPIK VOCABULARY TARGET</div>
-    <div class="score-box">MATCHED: <span id="count">0</span></div>
+    <div class="stat-item">
+        <span class="label">SCORE</span>
+        <span id="score" class="val">0</span>
+    </div>
+    <div class="stat-item">
+        <span class="label">RANK</span>
+        <span id="rank-text" class="val" style="color: var(--neon-blue);">BEGINNER</span>
+    </div>
+    <div class="stat-item">
+        <span class="label">ACCURACY</span>
+        <span id="accuracy" class="val">0%</span>
+    </div>
 </header>
 
 <div id="game-container">
@@ -137,8 +89,14 @@
     <div class="column" id="ko-list"></div>
 </div>
 
+<div id="rank-modal">
+    <h2 id="modal-rank" style="color: var(--neon-blue); margin: 0;">MASTER!</h2>
+    <p id="modal-msg">You've unlocked a new rank!</p>
+    <button onclick="closeModal()" style="background: var(--neon-blue); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold;">KEEP GOING</button>
+</div>
+
 <footer>
-    DEVELOPED BY <span class="dev-name">SANKALPA LOKULIYANAGE</span>
+    DEVELOPED BY SANKALPA LOKULIYANAGE
 </footer>
 
 <script src="game.js"></script>
