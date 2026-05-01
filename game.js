@@ -1,104 +1,140 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWDjcEsZA0b77s54fhOArKapvv2aHloqI4ZARf-ULFEKAs6BZjZ5DTjKQmmpQvhmOtGw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDcdTMXOmcNWlef_Xy8P3UhPW2vRdrasEzLa7Jyf5BRe6ocZq22KgfqIfEG7TCPtQt/exec';
 
+let currentUser = null;
+let currentScore = 0;
+let currentRank = "";
 let dataset = [];
 let selectedEn = null;
-let totalScore = 0;
 let roundCorrectCount = 0;
-let selectedLevel = "";
 
-async function startGame(level) {
-    selectedLevel = level;
-    document.getElementById('level-screen').style.display = 'none';
-    document.getElementById('loader').style.display = 'flex';
-    document.getElementById('current-lvl-display').innerText = level.toUpperCase();
-    await fetchWords();
-}
+// --- AUTHENTICATION ---
+async function handleAuth(type) {
+    const user = document.getElementById('auth-user').value.trim();
+    const pass = document.getElementById('auth-pass').value.trim();
+    if(!user || !pass) return alert("Fill all fields!");
 
-async function fetchWords() {
+    showLoader(true);
     try {
-        // .trim() භාවිතා කර ඇත Sheet නාමයේ ඇති විය හැකි හිස්තැන් ඉවත් කිරීමට
-        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${selectedLevel.trim()}`);
-        dataset = await res.json();
-        
-        if(dataset && dataset.length > 0) {
-            document.getElementById('loader').style.display = 'none';
-            renderMatchBoard();
+        if(type === 'login') {
+            const res = await fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`);
+            const data = await res.json();
+            if(data.status === 'success') {
+                loginUser(user, data.totalScore, data.rank);
+            } else {
+                alert("Invalid Access Code!");
+            }
         } else {
-            alert(selectedLevel + " සඳහා දත්ත හමු වූයේ නැත.\nකරුණාකර Sheet එකේ Headers පරීක්ෂා කරන්න.");
-            location.reload();
+            const res = await fetch(`${SCRIPT_URL}`, {
+                method: 'POST',
+                body: new URLSearchParams({ action: 'signup', username: user, password: pass }),
+                mode: 'no-cors'
+            });
+            alert("Account Created! Please Login.");
         }
-    } catch (e) { 
-        console.error(e);
-        alert("Connection Error! Please check your internet.");
-        location.reload();
-    }
+    } catch (e) { alert("Auth Error!"); }
+    showLoader(false);
 }
 
-function renderMatchBoard() {
+function loginUser(user, score, rank) {
+    currentUser = user;
+    currentScore = parseInt(score);
+    currentRank = rank;
+    
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('main-header').classList.remove('hidden');
+    document.getElementById('level-screen').style.display = 'flex';
+    
+    updateUI();
+}
+
+function updateUI() {
+    document.getElementById('user-display').innerText = currentUser.toUpperCase();
+    document.getElementById('rank-display').innerText = currentRank;
+    document.getElementById('total-score-display').innerText = currentScore;
+}
+
+// --- MISSION LOGIC ---
+async function startMission(level) {
+    document.getElementById('level-screen').style.display = 'none';
+    showLoader(true);
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getHistory&level=${level}`);
+        dataset = await res.json();
+        if(dataset.length > 0) {
+            document.getElementById('game-area').classList.remove('hidden');
+            renderBoard();
+        } else { alert("No data in this level!"); backToMenu(); }
+    } catch (e) { alert("Fetch Error!"); }
+    showLoader(false);
+}
+
+function renderBoard() {
     const enList = document.getElementById('en-list');
     const koList = document.getElementById('ko-list');
-    
-    enList.innerHTML = ""; 
-    koList.innerHTML = "";
-    selectedEn = null;
-    roundCorrectCount = 0;
+    enList.innerHTML = ""; koList.innerHTML = "";
+    selectedEn = null; roundCorrectCount = 0;
 
-    // වචන 6ක් තෝරා ගැනීම (දත්ත 6කට වඩා තිබේ නම් පමණක්)
     let limit = Math.min(dataset.length, 6);
     let roundData = [...dataset].sort(() => 0.5 - Math.random()).slice(0, limit);
-    
     let enSide = [...roundData].sort(() => 0.5 - Math.random());
     let koSide = [...roundData].sort(() => 0.5 - Math.random());
 
-    enSide.forEach(data => {
+    enSide.forEach(d => {
         let btn = document.createElement('div');
         btn.className = 'word-btn';
-        btn.innerText = data.english;
+        btn.innerText = d.english;
         btn.onclick = () => {
             document.querySelectorAll('#en-list .word-btn').forEach(b => b.classList.remove('active'));
-            selectedEn = { btn, matchId: data.korean };
             btn.classList.add('active');
+            selectedEn = { btn, id: d.korean };
         };
         enList.appendChild(btn);
     });
 
-    koSide.forEach(data => {
+    koSide.forEach(d => {
         let btn = document.createElement('div');
         btn.className = 'word-btn';
-        btn.innerText = data.korean;
-        btn.onclick = () => handleMatch(btn, data.korean, limit);
+        btn.innerText = d.korean;
+        btn.onclick = () => {
+            if(!selectedEn) return;
+            if(selectedEn.id === d.korean) {
+                btn.classList.add('correct');
+                selectedEn.btn.classList.add('correct');
+                roundCorrectCount++;
+                currentScore += 10;
+                if(roundCorrectCount === limit) finishRound();
+            } else {
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 400);
+            }
+        };
         koList.appendChild(btn);
     });
 }
 
-function handleMatch(btn, koText, currentLimit) {
-    if (!selectedEn) return;
-
-    if (selectedEn.matchId === koText) {
-        btn.classList.add('correct');
-        selectedEn.btn.classList.add('correct');
-        
-        totalScore += 10;
-        roundCorrectCount++;
-        document.getElementById('total-score').innerText = totalScore;
-        
-        selectedEn = null;
-        
-        if (roundCorrectCount === currentLimit) {
-            setTimeout(showScoreModal, 500);
-        }
-    } else {
-        btn.classList.add('wrong');
-        setTimeout(() => btn.classList.remove('wrong'), 400);
-    }
-}
-
-function showScoreModal() {
-    document.getElementById('round-score').innerText = totalScore;
-    document.getElementById('score-modal').style.display = "flex";
+async function finishRound() {
+    updateUI();
+    document.getElementById('round-score-display').innerText = "+" + (roundCorrectCount * 10);
+    document.getElementById('score-modal').style.display = 'flex';
+    
+    // Sync to Cloud
+    fetch(`${SCRIPT_URL}`, {
+        method: 'POST',
+        body: new URLSearchParams({ action: 'updateScore', username: currentUser, newScore: currentScore }),
+        mode: 'no-cors'
+    });
 }
 
 function nextRound() {
-    document.getElementById('score-modal').style.display = "none";
-    renderMatchBoard();
+    document.getElementById('score-modal').style.display = 'none';
+    renderBoard();
 }
+
+function backToMenu() {
+    document.getElementById('score-modal').style.display = 'none';
+    document.getElementById('game-area').classList.add('hidden');
+    document.getElementById('level-screen').style.display = 'flex';
+}
+
+function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+function logout() { location.reload(); }
