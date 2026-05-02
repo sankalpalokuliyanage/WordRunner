@@ -13,7 +13,7 @@
         .theme-blackpink { --neon: #f8a5c2; --accent: #ffffff; --bg: #000000; --glass: rgba(248, 165, 194, 0.15); }
         .theme-traditional { --neon: #e67e22; --accent: #c0392b; --bg: #1a0f00; --glass: rgba(230, 126, 34, 0.1); }
 
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; transition: 0.5s ease; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; transition: 0.5s ease; display: flex; flex-direction: column; }
         
         /* Auth Screen */
         .full-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -46,6 +46,18 @@
         .node.correct { transform: scale(0); opacity: 0; pointer-events: none; }
         .node.wrong { border-color: red; background: rgba(255,0,0,0.1); animation: shake 0.3s; }
 
+        /* Developed By Style */
+        .developed-by { 
+            text-align: center; 
+            font-size: 10px; 
+            letter-spacing: 2px; 
+            padding: 10px; 
+            opacity: 0.5; 
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--neon);
+        }
+
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
         .hidden { display: none !important; }
     </style>
@@ -60,6 +72,7 @@
         <button class="btn-neon" onclick="handleAuth('login')">LOGIN</button>
         <p style="font-size: 12px; margin: 15px 0; opacity: 0.5;">OR</p>
         <button class="btn-neon" style="background:none; border: 1px solid var(--neon); color: white;" onclick="handleAuth('signup')">CREATE NEW ID</button>
+        <div class="developed-by" style="margin-top: 20px;">Developed by Sankalpa Lokuliyanage</div>
     </div>
 </div>
 
@@ -92,6 +105,7 @@
         <div class="level-card" onclick="startMission('Level 6')"><span class="lvl-label">LEVEL 6</span><div class="lvl-name">Commander II</div></div>
     </div>
     <button onclick="location.reload()" style="margin-top: 40px; background: none; border: none; color: #444; cursor: pointer;">[ LOGOUT ]</button>
+    <div class="developed-by" style="margin-top: 20px;">Developed by Sankalpa Lokuliyanage</div>
 </div>
 
 <div id="game-area">
@@ -103,6 +117,7 @@
         <div class="column" id="en-list"></div>
         <div class="column" id="ko-list"></div>
     </div>
+    <div class="developed-by" style="margin-top: auto; padding-bottom: 20px;">Developed by Sankalpa Lokuliyanage</div>
 </div>
 
 <script src="game.js"></script>
