@@ -3,90 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOPIK MASTER</title>
+    <title>TOPIK WORD MASTER</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --accent: #ff00ff; --bg: #000810; --glass: rgba(0, 20, 40, 0.4); }
-        .theme-bts { --neon: #bb86fc; --accent: #03dac6; --bg: #120024; }
-        .theme-blackpink { --neon: #f8a5c2; --accent: #ffffff; --bg: #000000; }
-        .theme-traditional { --neon: #e67e22; --accent: #c0392b; --bg: #1a0f00; }
+        :root { --neon: #00f2ff; --accent: #ff00ff; --bg: #000810; --glass: rgba(0, 20, 40, 0.85); }
+        .theme-bts { --neon: #bb86fc; --accent: #03dac6; --bg: #120024; --glass: rgba(187, 134, 252, 0.1); }
+        .theme-blackpink { --neon: #f8a5c2; --accent: #ffffff; --bg: #000000; --glass: rgba(248, 165, 194, 0.15); }
+        .theme-traditional { --neon: #e67e22; --accent: #c0392b; --bg: #1a0f00; --glass: rgba(230, 126, 34, 0.1); }
 
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; transition: 0.5s ease; display: flex; flex-direction: column; }
         
-        /* HUD & Header */
-        header { padding: 12px 20px; border-bottom: 1px solid var(--neon); background: rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .timer-track { height: 4px; background: #111; width: 100%; position: absolute; bottom: 0; left: 0; }
+        .full-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .cyber-card { background: var(--glass); border: 2px solid var(--neon); padding: 30px 20px; border-radius: 30px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.15); backdrop-filter: blur(15px); }
+        
+        input { background: rgba(0, 242, 255, 0.05); border: 1px solid #1e3a4f; color: white; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
+        .btn-neon { background: var(--neon); color: black; border: none; padding: 14px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; font-family: 'Orbitron'; letter-spacing: 1px; }
+
+        header { padding: 12px 20px; border-bottom: 1px solid var(--neon); background: rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; }
+        .timer-track { height: 5px; background: #111; width: 100%; position: absolute; bottom: 0; left: 0; }
         #oxygen-bar { height: 100%; background: var(--neon); width: 100%; transition: 0.1s linear; }
 
-        /* Combo Meter */
-        #combo-container { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 50; }
-        #combo-text { font-family: 'Orbitron'; font-size: 24px; font-weight: 900; color: var(--accent); text-shadow: 0 0 10px var(--accent); opacity: 0; transition: 0.2s; }
+        #combo-container { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 100; }
+        #combo-text { font-family: 'Orbitron'; font-size: 28px; color: var(--neon); text-shadow: 0 0 15px var(--neon); opacity: 0; transition: 0.3s; }
 
-        /* Game Area & Bubbles */
-        #game-area { flex: 1; display: none; position: relative; padding: 20px; }
-        .bubble-container { display: flex; justify-content: space-around; width: 100%; height: 80%; margin-top: 40px; }
-        .column { display: flex; flex-direction: column; justify-content: space-around; height: 100%; }
+        #dashboard { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .theme-grid { display: flex; gap: 15px; margin-bottom: 30px; }
+        .theme-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; transition: 0.3s; }
+        
+        .level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 400px; }
+        .level-card { background: var(--glass); border: 1px solid var(--neon); padding: 20px 10px; border-radius: 20px; text-align: center; position: relative; }
+        .lvl-label { font-size: 10px; color: var(--neon); letter-spacing: 2px; display: block; }
+
+        #game-area { flex: 1; display: none; flex-direction: column; position: relative; padding: 10px; }
+        .bubble-arena { display: flex; justify-content: space-around; align-items: center; flex: 1; }
+        .column { display: flex; flex-direction: column; gap: 20px; }
 
         .bubble {
-            width: 85px; height: 85px;
+            width: 80px; height: 80px;
             background: var(--glass);
             border: 2px solid var(--neon);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            text-align: center; font-size: 13px; font-weight: 700;
-            cursor: pointer; position: relative;
-            box-shadow: inset 0 0 15px var(--neon), 0 0 10px rgba(0, 242, 255, 0.2);
+            text-align: center; font-size: 14px; font-weight: bold;
+            box-shadow: inset 0 0 15px var(--neon);
             animation: float 4s ease-in-out infinite;
-            transition: transform 0.2s, background 0.3s;
-            user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: 0.3s; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(3deg); }
-        }
+        .bubble.active { background: var(--neon); color: black; transform: scale(1.1); box-shadow: 0 0 25px var(--neon); }
+        .bubble.correct { transform: scale(0); opacity: 0; pointer-events: none; }
+        .bubble.wrong { border-color: red; animation: shake 0.3s; }
 
-        .bubble.active { background: var(--neon); color: black; transform: scale(1.15); box-shadow: 0 0 30px var(--neon); }
-        
-        /* Particle Effect */
-        .particle {
-            position: absolute; pointer-events: none;
-            width: 6px; height: 6px; background: var(--neon);
-            border-radius: 50%; animation: popOut 0.6s ease-out forwards;
-        }
+        .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--neon); pointer-events: none; }
 
-        @keyframes popOut {
-            to { transform: translate(var(--x), var(--y)); opacity: 0; }
-        }
-
-        /* Developed By Footer */
         .developed-by { text-align: center; font-size: 10px; letter-spacing: 2px; padding: 10px; opacity: 0.5; font-weight: bold; color: var(--neon); }
-        
-        /* Logic for other screens remains similar */
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
         .hidden { display: none !important; }
-        .full-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9000; display: flex; align-items: center; justify-content: center; }
-        .cyber-card { background: rgba(0, 20, 40, 0.9); border: 2px solid var(--neon); padding: 30px 20px; border-radius: 30px; width: 85%; max-width: 360px; text-align: center; }
-        input { background: rgba(0, 242, 255, 0.05); border: 1px solid #1e3a4f; color: white; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; }
-        .btn-neon { background: var(--neon); color: black; border: none; padding: 14px; border-radius: 12px; font-weight: 900; width: 100%; font-family: 'Orbitron'; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen" class="full-screen">
     <div class="cyber-card">
-        <h2 style="font-family: 'Orbitron'; color: var(--neon);">LOGIN</h2>
-        <input type="text" id="auth-user" placeholder="Username">
-        <input type="password" id="auth-pass" placeholder="Password">
-        <button class="btn-neon" onclick="handleAuth('login')">INITIALIZE</button>
+        <h2 style="font-family: 'Orbitron'; color: var(--neon); margin-top: 0;">LOGIN</h2>
+        <input type="text" id="auth-user" placeholder="Enter Username">
+        <input type="password" id="auth-pass" placeholder="Enter Password">
+        <button class="btn-neon" onclick="handleAuth('login')">LOGIN</button>
         <p style="font-size: 12px; margin: 15px 0; opacity: 0.5;">OR</p>
-        <button class="btn-neon" style="background:none; border: 1px solid var(--neon); color: white;" onclick="handleAuth('signup')">CREATE ID</button>
+        <button class="btn-neon" style="background:none; border: 1px solid var(--neon); color: white;" onclick="handleAuth('signup')">CREATE NEW ID</button>
         <div class="developed-by" style="margin-top: 20px;">Developed by Sankalpa Lokuliyanage</div>
     </div>
 </div>
 
-<header id="hud" class="hidden">
+<header id="hud" class="hidden" style="margin-top: 8px;" >
     <div style="flex: 1;">
-        <div id="rank-display" style="font-size: 9px; color: var(--neon); font-weight: bold;">BEGINNER CADET</div>
+        <div id="rank-display" style="font-size: 9px; color: var(--neon); font-weight: bold;">---</div>
         <div id="user-display" style="font-size: 14px; font-weight: 900;">PILOT: ---</div>
     </div>
     <div style="flex: 1; text-align: right;">
@@ -98,15 +91,36 @@
 
 <div id="combo-container"><div id="combo-text">COMBO X2</div></div>
 
-<div id="game-area">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <button onclick="exitGame()" style="background: none; border: 1px solid var(--neon); color: var(--neon); padding: 5px 10px; border-radius: 8px; font-size: 11px;">EXIT MISSION</button>
+<div id="dashboard" style="margin-bottom: 8px;">
+    <div class="theme-grid">
+        <div class="theme-btn" style="background: #00f2ff;" onclick="changeTheme('dark')"></div>
+        <div class="theme-btn" style="background: #bb86fc;" onclick="changeTheme('bts')"></div>
+        <div class="theme-btn" style="background: #f8a5c2;" onclick="changeTheme('blackpink')"></div>
+        <div class="theme-btn" style="background: #e67e22;" onclick="changeTheme('traditional')"></div>
     </div>
-    <div class="bubble-container">
+    <h3 style="font-family: 'Orbitron'; letter-spacing: 4px; margin-bottom: 25px;">SELECT LEVEL</h3>
+    <div class="level-grid">
+        <div class="level-card" onclick="startMission('Level 1')"><span class="lvl-label">LEVEL 1</span><div class="lvl-name">Beginner I</div></div>
+        <div class="level-card" onclick="startMission('Level 2')"><span class="lvl-label">LEVEL 2</span><div class="lvl-name">Beginner II</div></div>
+        <div class="level-card" onclick="startMission('Level 3')"><span class="lvl-label">LEVEL 3</span><div class="lvl-name">Explorer I</div></div>
+        <div class="level-card" onclick="startMission('Level 4')"><span class="lvl-label">LEVEL 4</span><div class="lvl-name">Explorer II</div></div>
+        <div class="level-card" onclick="startMission('Level 5')"><span class="lvl-label">LEVEL 5</span><div class="lvl-name">Commander I</div></div>
+        <div class="level-card" onclick="startMission('Level 6')"><span class="lvl-label">LEVEL 6</span><div class="lvl-name">Commander II</div></div>
+    </div>
+    <button onclick="location.reload()" style="margin-top: 40px; background: none; border: none; color: #444; cursor: pointer;">[ LOGOUT ]</button>
+    <div class="developed-by" style="margin-top: 20px;">Developed by Sankalpa Lokuliyanage</div>
+</div>
+
+<div id="game-area">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <button onclick="exitGame()" style="background: none; border: 1px solid var(--neon); color: var(--neon); padding: 5px 12px; border-radius: 8px; font-size: 11px;">EXIT MISSION</button>
+        <div id="mission-status" style="font-size: 12px; color: var(--neon);">MISSION ACTIVE</div>
+    </div>
+    <div class="bubble-arena">
         <div class="column" id="en-list"></div>
         <div class="column" id="ko-list"></div>
     </div>
-    <div class="developed-by" style="margin-top: auto;">Developed by Sankalpa Lokuliyanage</div>
+    <div class="developed-by" style="margin-top: auto; padding-bottom: 20px;">Developed by Sankalpa Lokuliyanage</div>
 </div>
 
 <script src="game.js"></script>
